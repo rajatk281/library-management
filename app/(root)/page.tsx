@@ -1,8 +1,14 @@
-import { Button } from '@/components/ui/button';
-
+import BookOverview from '@/components/BookOverview';
+import Booklist from '@/components/BookList';
+import { sampleBooks } from '@/constants';
 const Home = () =>(
     <>
-      <Button className="m-5">Click Me</Button>
+      <BookOverview {...sampleBooks[0]}/>
+      <Booklist 
+      title='Latest books'
+      books={sampleBooks}
+      containerClassName='mx-auto justify-between my-12'
+      />
     </>
   );
 
