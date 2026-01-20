@@ -17,27 +17,40 @@ import {
   FormMessage,
 } from './ui/form';
 import { FIELD_NAMES, FIELD_TYPES } from '@/constants';
+import { Toast } from './Toaster';
+import { useRouter } from 'next/navigation';
 
 interface Props<T extends FieldValues> {
-  schema: ZodType<T>;
+  schema: z.ZodObject<any>;
   defaultValues: T;
-  onSubmit: (data: T) => Promise<{ success: boolean; error?: string }>;
+  onSubmit: (data: T) => Promise<{ success: boolean; message?: string }>;
   type: 'SIGN_IN' | 'SIGN_UP';
 }
 
 const AuthForm = <T extends FieldValues>({ type, schema, defaultValues, onSubmit }: Props<T>) => {
-  
+
   const isSignIn = type === 'SIGN_IN';
+  const router = useRouter();
 
   // console.log(schema)
 
   // 1. Define your form.
-  const form: UseFormReturn<T> = useForm({
-    resolver: zodResolver(schema),
+  const form: UseFormReturn<T> = useForm<T>({
+    resolver: zodResolver(schema) as any,
     defaultValues: defaultValues as DefaultValues<T>,
   });
+
   // 2. Define a submit handler.
-  const handleSubmit: SubmitHandler<T> = async (data) => {};
+  const handleSubmit: SubmitHandler<T> = async (data) => {
+    const result = await onSubmit(data)
+    console.log(result)
+    if (result.success) {
+      Toast({ message: result.message || "Success" })
+      router.push("/")
+    } else {
+      Toast({ message: result.message || "Operation failed" })
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -53,27 +66,27 @@ const AuthForm = <T extends FieldValues>({ type, schema, defaultValues, onSubmit
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 w-full">
           {Object.keys(defaultValues).map((field) => (
             <FormField
-            key={field as Path<T>} 
+              key={field as Path<T>}
               control={form.control}
               name={field}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className='capitalize'>{FIELD_NAMES[field.name as keyof typeof FIELD_NAMES]}</FormLabel>
                   <FormControl>
-                    {field.name === "universityCard" ? 
-                    (<ImageUpload onFileChange={field.onChange}/>) : (
-                      <Input required 
-                      type=
-                        {FIELD_TYPES[field.name as keyof typeof FIELD_TYPES]}
-                       {...field} className='form-input'/>
-                    ) } 
-                    </FormControl>
+                    {field.name === "universityCard" ?
+                      (<ImageUpload onFileChange={field.onChange} />) : (
+                        <Input required
+                          type=
+                          {FIELD_TYPES[field.name as keyof typeof FIELD_TYPES]}
+                          {...field} className='form-input' />
+                      )}
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           ))}
-          <Button className='form-btn' type="submit">{isSignIn?"Sign in" : "Sign up"}</Button>
+          <Button className='form-btn' type="submit">{isSignIn ? "Sign in" : "Sign up"}</Button>
         </form>
       </Form>
       <p className="text-center text-base font-medium">
