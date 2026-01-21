@@ -4,6 +4,7 @@ import { db } from "./Database/Drizzle"
 import { users } from "./Database/Schema"
 import { eq } from "drizzle-orm"
 import bcrypt, { compare } from "bcryptjs";
+import { Toast } from "./components/Toaster"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     session: {
@@ -12,32 +13,53 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     providers: [
         CredentialsProvider({
             async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) {
-                    throw new Error('No credentials provided')
+                try {
+                    if (!credentials?.email || !credentials?.password) {
+                        console.log("No credentials provided:")
+                        return null; 
+                    }
+                    console.log("EMAIL FROM FORM:", credentials.email);
+
+                    const user = await db
+                        .select()
+                        .from(users)
+                        .where(eq(users.email, String(credentials.email)))
+                        .limit(1);
+
+                    console.log("USER FROM DB:", user);
+
+
+                    if (user.length === 0) {
+                        console.log("user not exist")
+                        // Toast(message : "")
+                        return null; 
+                    }
+
+                    const isPasswordValid = await compare(
+                        credentials.password.toString(),
+                        user[0].password
+                    );
+
+                    if (!isPasswordValid) {
+                        console.log("Invalid password")
+                        return null;
+                    }
+
+                    return {
+                        id: user[0].id,
+                        name: user[0].fullName,
+                        email: user[0].email,
+                    } as User;
+
+                    console.log(user)
+
+                } catch (err) {
+                    console.error("AUTHORIZE ERROR:", err);
+                    return null; 
                 }
-                const user = await db
-                    .select()
-                    .from(users)
-                    .where(eq(users.email, String(credentials.email)))
-                    .limit(1);
-
-                if (user.length === 0) {
-                    throw new Error('No user found')
-                }
-
-                const isPasswordValid = await compare(credentials.password.toString(), user[0].password)
-
-                if (!isPasswordValid) {
-                    throw new Error('Incorrect password')
-                }
-
-                return {
-                    id: user[0].id,
-                    name: user[0].fullName,
-                    email: user[0].email,
-                } as User
             }
         })
+
     ],
 
     pages: {

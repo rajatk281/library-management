@@ -25,7 +25,7 @@ const Header = ({ session }: { session: Session }) => {
             <Avatar>
               <AvatarFallback className='text-black bg-blue-300 border-2 border-blue-600'>{getInitials(session?.user?.name || "")}</AvatarFallback>
             </Avatar>
-          </Link>blue
+          </Link>
         </li>
       </ul>
     </header>

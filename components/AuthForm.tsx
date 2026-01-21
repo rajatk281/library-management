@@ -43,7 +43,7 @@ const AuthForm = <T extends FieldValues>({ type, schema, defaultValues, onSubmit
   // 2. Define a submit handler.
   const handleSubmit: SubmitHandler<T> = async (data) => {
     const result = await onSubmit(data)
-    console.log(result)
+    // console.log(result)
     if (result.success) {
       Toast({ message: result.message || "Success" })
       router.push("/")
@@ -68,7 +68,7 @@ const AuthForm = <T extends FieldValues>({ type, schema, defaultValues, onSubmit
             <FormField
               key={field as Path<T>}
               control={form.control}
-              name={field}
+              name={field as Path<T>}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className='capitalize'>{FIELD_NAMES[field.name as keyof typeof FIELD_NAMES]}</FormLabel>
